@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using RaccoonBlog.Web.Commands;
 using RaccoonBlog.Web.Helpers;
@@ -19,27 +20,33 @@ namespace RaccoonBlog.Web.Controllers
         public const string CommenterCookieName = "commenter";
 
 		public ActionResult Details(int id, string slug, Guid key)
-        {
+		{
         	var post = Session
         		.Include<Post>(x => x.CommentsId)
         		.Include(x => x.AuthorId)
         		.Load(id);
 
+
             if (post == null)
                 return HttpNotFound();
 
 			if (post.IsPublicPost(key) == false)
-				return HttpNotFound();  
+				return HttpNotFound();
 
-			var comments = Session.Load<PostComments>(post.CommentsId);
+
+			var nextPost = Session.GetNextPrevPost(post, true);
+			var prevPost = Session.GetNextPrevPost(post, false);
+
+			var comments = Session.Load<PostComments>(post.CommentsId); // already loaded by the include
+			
 			var vm = new PostViewModel
 			{
 				Post = post.MapTo<PostViewModel.PostDetails>(),
 				Comments = comments.Comments
 					.OrderBy(comment => comment.CreatedAt)
 					.MapTo<PostViewModel.Comment>(),
-				NextPost = Session.GetNextPrevPost(post, true),
-				PreviousPost = Session.GetNextPrevPost(post, false),
+				NextPost = nextPost.Value,
+				PreviousPost = prevPost.Value,
 				AreCommentsClosed = comments.AreCommentsClosed(post, BlogConfig.NumberOfDayToCloseComments),
 			};
 

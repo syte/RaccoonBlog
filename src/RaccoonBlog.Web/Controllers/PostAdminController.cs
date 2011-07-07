@@ -30,6 +30,8 @@ namespace RaccoonBlog.Web.Controllers
 
 			var comments = Session.Load<PostComments>(post.CommentsId);
 
+        	var nextPost = Session.GetNextPrevPost(post, true);
+        	var prevPost = Session.GetNextPrevPost(post, false);
         	var vm = new AdminPostDetailsViewModel
 			{
 				Post = post.MapTo<AdminPostDetailsViewModel.PostDetails>(),
@@ -39,8 +41,8 @@ namespace RaccoonBlog.Web.Controllers
 					.OrderBy(comment => comment.CreatedAt)
 					.MapTo<AdminPostDetailsViewModel.Comment>(),
 
-				NextPost = Session.GetNextPrevPost(post, true),
-				PreviousPost = Session.GetNextPrevPost(post, false),
+				NextPost = nextPost.Value,
+				PreviousPost = prevPost.Value,
 				AreCommentsClosed = comments.AreCommentsClosed(post, BlogConfig.NumberOfDayToCloseComments),
 			};
 

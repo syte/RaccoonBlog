@@ -10,11 +10,9 @@ namespace RaccoonBlog.Web.Infrastructure.Common
 {
 	public static class DocumentSessionExtensions
 	{
-		public static PostReference GetNextPrevPost(this IDocumentSession session, Post compareTo, bool isNext)
+		public static Lazy<PostReference> GetNextPrevPost(this IDocumentSession session, Post compareTo, bool isNext)
 		{
-			var queryable = session.Query<Post>()
-				.WhereIsPublicPost();
-
+			var queryable = session.Query<Post>();
 			if (isNext)
 			{
 				queryable = queryable
@@ -27,15 +25,13 @@ namespace RaccoonBlog.Web.Infrastructure.Common
 					.Where(post => post.PublishAt < compareTo.PublishAt)
 					.OrderByDescending(post => post.PublishAt);
 			}
-			
+
 			var postReference = queryable
-			  .Select(p => new PostReference{ Id = p.Id, Title = p.Title })
-			  .FirstOrDefault();
+			  .Where(x => x.IsDeleted == false)
+			  .Select(p => new PostReference { Id = p.Id, Title = p.Title })
+			  .Lazily();
 
-			if (postReference == null)
-				return null;
-
-			return postReference;
+			return new Lazy<PostReference>(() => postReference.Value.FirstOrDefault());
 		}
 
 		public static User GetCurrentUser(this IDocumentSession session)

@@ -31,6 +31,8 @@ namespace RaccoonBlog.Web.Infrastructure.Raven
 					ConnectionStringName = "RavenDB"
                 }.Initialize();
 
+    		store.Conventions.UseParallelMultiGet = false;
+
             return store;
         }
 
